@@ -155,14 +155,10 @@ all_destinations = ['H1', 'H2', 'H3',  'RA', 'RB','RC', 'RD']
 class Router:
 
     Intf_data = namedtuple('Intf_data',['name','port'])
-    ##@param name: friendly router name for debugging
-    # @param cost_D: cost table to neighbors {neighbor: {interface: cost}}
-    # @param max_queue_size: max queue length (passed to Interface)
     def __init__(self, name, cost_D, max_queue_size):
         self.stop = False #for thread termination
         self.name = name
         #create a list of interfaces
-        # self.intf_L = [Interface(max_queue_size) for _ in range(len(cost_D))]
         self.neb_routers = [self.Intf_data(self.name,None)]
         self.intf_L = dict()
         self.fastest_D = dict()
@@ -185,8 +181,6 @@ class Router:
         print(self.name, "interfaces: ")
         for port, intf in self.intf_L.items():
             print("port: ", port, "name ", intf.name)
-        #save neighbors and interfeces on which we connect to them
-        #TODO: set up the routing table for connected hosts
         print('%s: Initialized routing table' % self)
         self.print_routes()
 
@@ -292,18 +286,16 @@ class Router:
     print_lock = threading.Lock()
     def print_routes(self):
         self.print_lock.acquire()
-        print('%s: routing table' % self)
-        #print(self.rt_tbl_D)
-        print("       Cost to:")
-        print("    ",self.name," ", end='')
+        print("\n")
+        print(self.name," ", end='')
         for dest in all_destinations:
             print(dest," ",end='')
         print()
         for index, router in enumerate(self.neb_routers):
-            if index == 0:
-                print("From ", end='')
-            else:
-                print("     ", end='')
+            # if index == 0:
+            #     print("From ", end='')
+            # else:
+            #     print("     ", end='')
             print(router.name + "  ", end='')
             for dest in all_destinations:
                 if dest in self.rt_tbl_D.keys():

@@ -292,18 +292,12 @@ class Router:
     print_lock = threading.Lock()
     def print_routes(self):
         self.print_lock.acquire()
-        print('%s: routing table' % self)
-        #print(self.rt_tbl_D)
-        print("       Cost to:")
-        print("    ",self.name," ", end='')
+        print("\n")
+        print(self.name," ", end='')
         for dest in all_destinations:
             print(dest," ",end='')
         print()
         for index, router in enumerate(self.neb_routers):
-            if index == 0:
-                print("From ", end='')
-            else:
-                print("     ", end='')
             print(router.name + "  ", end='')
             for dest in all_destinations:
                 if dest in self.rt_tbl_D.keys():
