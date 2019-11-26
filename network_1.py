@@ -149,7 +149,7 @@ class Host:
                 print (threading.currentThread().getName() + ': Ending')
                 return
 
-all_destinations = ['H1', 'H2', 'RA', 'RB']
+all_dest = ['H1', 'H2', 'RA', 'RB']
 
 ## Implements a multi-interface router
 class Router:
@@ -209,8 +209,8 @@ class Router:
                 if p.prot_S == 'data':
                     self.forward_packet(p,i)
                 elif p.prot_S == 'control':
-                    mssg = RouterMessage.from_byte_S(p.data_S)
-                    self.update_routes(mssg, self.intf_L[i].name)
+                    msg = RouterMessage.from_byte_S(p.data_S)
+                    self.update_routes(msg, self.intf_L[i].name)
                 else:
                     raise Exception('%s: Unknown packet type in packet %s' % (self, p))
             
@@ -235,18 +235,16 @@ class Router:
     ## send out route update
     # @param i Interface number on which to send out a routing update
     def send_routes(self, i):
-        # TODO: Send out a routing table update
         #create a routing table update packet
-        p = NetworkPacket(0, 'control',  RouterMessage(self.name, self.build_update_tbl() ).to_byte_S())
+        p = NetworkPacket(0, 'control',  RouterMessage(self.name, self.build_tbl()).to_byte_S())
         try:
-            #TODO: add logic to send out a route update
             print('%s: sending routing update "%s" from interface %d' % (self, p, i))
             self.intf_L[i].put(p.to_byte_S(), 'out', True)
         except queue.Full:
             print('%s: packet "%s" lost on interface %d' % (self, p, i))
             pass
 
-    def build_update_tbl(self):
+    def build_tbl(self):
         tbl = dict()
         for dest, routers in self.rt_tbl_D.items():
             tbl[dest] = routers[self.name]
@@ -254,20 +252,20 @@ class Router:
 
 
     #  @param p Packet containing routing information
-    def update_routes(self, p, intf_name):
-        print('%s: Received routing update %s from interface %s' % (self, p, intf_name))
+    def update_routes(self, p, i):
+        print('%s: Received routing update %s from interface %s' % (self, p, i))
         print("updates: ",p.table)
         # update the table for the ports you just recieved:
         for host, cost in p.table.items():
             if host in self.rt_tbl_D.keys():
-                self.rt_tbl_D[host][intf_name] = cost
+                self.rt_tbl_D[host][i] = cost
             else:
                 self.rt_tbl_D[host] = dict()
-                self.rt_tbl_D[host][intf_name] = cost
+                self.rt_tbl_D[host][i] = cost
         change = False
         # check to see if anything in your table changes:
         for dest, cost in p.table.items():
-            new_cost = self.rt_tbl_D[intf_name][self.name] + cost
+            new_cost = self.rt_tbl_D[i][self.name] + cost
             if self.name in self.rt_tbl_D[dest].keys():
                 old_cost = self.rt_tbl_D[dest][self.name]
             else:
@@ -276,7 +274,7 @@ class Router:
             if new_cost < old_cost:
                 self.rt_tbl_D[dest][self.name] = new_cost
                 for port, intf in self.intf_L.items():
-                    if intf.name == intf_name:
+                    if intf.name == i:
                         self.fastest_D[dest] = port
                         break
                 print("New fastest port to %s: %d" % (dest, self.fastest_D[dest]))
@@ -294,12 +292,12 @@ class Router:
         self.print_lock.acquire()
         print("\n")
         print(self.name," ", end='')
-        for dest in all_destinations:
+        for dest in all_dest:
             print(dest," ",end='')
         print()
         for index, router in enumerate(self.neb_routers):
             print(router.name + "  ", end='')
-            for dest in all_destinations:
+            for dest in all_dest:
                 if dest in self.rt_tbl_D.keys():
                     if router.name in self.rt_tbl_D[dest].keys():
                         print(str(self.rt_tbl_D[dest][router.name]) + "   ",end='')

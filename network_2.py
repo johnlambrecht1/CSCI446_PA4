@@ -149,7 +149,7 @@ class Host:
                 print (threading.currentThread().getName() + ': Ending')
                 return
 
-all_destinations = ['H1', 'H2', 'RA', 'RB']
+all_dest = ['H1', 'H2', 'RA', 'RB']
 
 ## Implements a multi-interface router
 class Router:
@@ -220,7 +220,6 @@ class Router:
     #  @param i Incoming interface number for packet p
     def forward_packet(self, p, i):
         try:
-            # TODO: Here you will need to implement a lookup into the 
             # forwarding table to find the appropriate outgoing interface
             # for now we assume the outgoing interface is 1
             forward_port = self.fastest_D[p.dst]
@@ -294,12 +293,12 @@ class Router:
         self.print_lock.acquire()
         print("\n")
         print(self.name," ", end='')
-        for dest in all_destinations:
+        for dest in all_dest:
             print(dest," ",end='')
         print()
         for index, router in enumerate(self.neb_routers):
             print(router.name + "  ", end='')
-            for dest in all_destinations:
+            for dest in all_dest:
                 if dest in self.rt_tbl_D.keys():
                     if router.name in self.rt_tbl_D[dest].keys():
                         print(str(self.rt_tbl_D[dest][router.name]) + "   ",end='')
